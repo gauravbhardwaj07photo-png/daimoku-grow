@@ -4,7 +4,7 @@
   "description": "A beautiful spiritual guide and motivation app. Track your Daimoku (chanting), water your virtual plant, and watch it grow into a majestic tree.",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#f3f6f3",
   "theme_color": "#526f52",
   "orientation": "portrait",
