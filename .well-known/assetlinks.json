@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.gauravbhardwaj07photo_png.twa",
+        "sha256_cert_fingerprints": ["70:46:26:8D:7F:AD:F4:1E:91:CD:AC:62:5F:EE:51:4C:1A:6C:19:99:8B:2E:69:A8:7F:35:54:4E:54:24:57:97"]
+      }
+    }]
