@@ -1534,3 +1534,7 @@ body.theme-forest-dark .btn-debug-action {
   .plant-card { min-height: 350px; }
   .timer-display-container { width: 180px; height: 180px; }
 }
+/* Hide the top bar */
+header, .header, #header, .top-bar {
+  display: none !important;
+}
