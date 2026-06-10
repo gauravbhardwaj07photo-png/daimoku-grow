@@ -1,0 +1,63 @@
+const CACHE_NAME = 'daimoku-grow-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './styles.css',
+  './plant.js',
+  './app.js',
+  './manifest.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return Promise.allSettled(
+        ASSETS.map((asset) => {
+          return cache.add(asset).catch((err) => {
+            console.warn(`Failed to cache asset: ${asset}`, err);
+          });
+        })
+      );
+    })
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (e) => {
+  // Skip cross-origin schemes (e.g. chrome-extension)
+  if (!e.request.url.startsWith(self.location.origin) && !e.request.url.startsWith('https://cdnjs.cloudflare.com')) {
+    return;
+  }
+  
+  e.respondWith(
+    fetch(e.request)
+      .then((res) => {
+        if (res.status === 200) {
+          const resClone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, resClone);
+          });
+        }
+        return res;
+      })
+      .catch(() => {
+        return caches.match(e.request);
+      })
+  );
+});
