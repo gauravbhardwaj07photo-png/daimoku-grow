@@ -16,6 +16,11 @@ const PlantRenderer = (function() {
   let isDead = false;
   let isChanting = false;
   
+  // Lion Animation State Machine Variables
+  let lionState = 'offscreen'; // 'offscreen', 'walking-in', 'sitting', 'walking-out'
+  let lionX = -1000;
+  let walkBob = 0;
+  
   // Theme Color Configurations (so the pot matches the active theme)
   const colors = {
     soil: '#4e3b31',
@@ -758,40 +763,62 @@ const PlantRenderer = (function() {
       
       ctx.restore();
 
-      // Lion Cub Animation
-      const cycle = windTime % 300; // 5 minute cycle (300 seconds)
-      
-      let lionX = -50;
-      let isSitting = false;
+      // Lion Cub Animation State Machine
+      const targetSittingX = potX - 85; // Positioned beautifully next to the pot on all screen sizes
+      const offscreenLeftX = -35;
+      const offscreenRightX = w + 35;
+
+      if (isChanting) {
+        if (lionState === 'offscreen') {
+          lionState = 'walking-in';
+          lionX = offscreenLeftX;
+        } else if (lionState === 'walking-out') {
+          lionState = 'walking-in';
+        }
+
+        if (lionState === 'walking-in') {
+          lionX += 1.2; // Walk speed
+          walkBob = Math.sin(lionX * 0.3) * 2;
+          if (lionX >= targetSittingX) {
+            lionX = targetSittingX;
+            lionState = 'sitting';
+            walkBob = 0;
+          }
+        } else if (lionState === 'sitting') {
+          lionX = targetSittingX;
+          walkBob = 0;
+        }
+      } else {
+        if (lionState === 'sitting' || lionState === 'walking-in') {
+          lionState = 'walking-out';
+        }
+
+        if (lionState === 'walking-out') {
+          lionX += 1.2; // Walk speed
+          walkBob = Math.sin(lionX * 0.3) * 2;
+          if (lionX >= offscreenRightX) {
+            lionX = -1000;
+            lionState = 'offscreen';
+            walkBob = 0;
+          }
+        }
+      }
+
+      const isSitting = (lionState === 'sitting');
       let isRoaring = false;
-      let walkBob = 0;
-      
-      if (cycle < 10) {
-        // Walking in from left to center left (10 seconds)
-        lionX = -50 + (cycle / 10) * (potX - 120 + 50); 
-        walkBob = Math.sin(cycle * 8) * 2;
-      } else if (cycle < 40) {
-        // Sitting near the pot (30 seconds)
-        lionX = potX - 120;
-        isSitting = true;
-        if (cycle > 30 && cycle < 40) {
-          // Roar for the last 10 seconds of sitting
+      if (isSitting) {
+        // Roar for 3 seconds every 15 seconds
+        const roarCycle = (windTime * 3) % 15;
+        if (roarCycle > 12) {
           isRoaring = true;
         }
-      } else if (cycle < 50) {
-        // Walking out to right (10 seconds)
-        lionX = potX - 120 + ((cycle - 40) / 10) * (w + 50 - (potX - 120));
-        walkBob = Math.sin((cycle - 40) * 8) * 2;
-      } else {
-        // Offscreen waiting for next cycle
-        lionX = -1000;
       }
-      
-      const lionY = potY + 65 * masterScale + walkBob; // Ground level near the base of the pot
+
+      const lionY = potY + 70 + walkBob; // Stable ground level next to the pot
       
       ctx.save();
       ctx.translate(lionX, lionY);
-      ctx.scale(1.5, 1.5);
+      ctx.scale(1.3, 1.3); // Scale slightly for mobile optimization
       
       // Draw Lion Cub
       
