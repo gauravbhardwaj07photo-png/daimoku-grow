@@ -11,21 +11,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const DECAY_DURATION_HOURS = 72; // Takes 72 hours of neglect to go from 100% to 0% health
   
   const QUOTES = [
-    { text: "Even one daimoku can pervade the entire universe. Truly heartfelt and determined daimoku, therefore, has the power to move everything.", author: "Daisaku Ikeda" },
-    { text: "In times of suffering, chant daimoku. In times of joy, chant daimoku. Chanting daimoku is itself happiness.", author: "Daisaku Ikeda" },
-    { text: "Nam-myoho-renge-kyo is the fundamental power of the universe. Please chant resounding daimoku morning and evening with the vibrant rhythm of majestic horses galloping through the heavens.", author: "Daisaku Ikeda" },
-    { text: "Daimoku chanted with the deep conviction that one's life is the entity of the Mystic Law cannot fail to resonate with the universe. You will definitely attain complete freedom.", author: "Daisaku Ikeda" },
-    { text: "The important thing is to continue chanting daimoku, no matter what. Whether our prayers are answered right away or not, we must keep chanting, without harboring any doubts.", author: "Daisaku Ikeda" },
-    { text: "When we take our problems to the Gohonzon and chant Nam-myoho-renge-kyo, courage wells forth and hope begins to shine in our hearts.", author: "Daisaku Ikeda" },
-    { text: "Nichiren Buddhism is about starting from today, starting from this very moment, with a fresh determination. A person of chanting is never defeated.", author: "Daisaku Ikeda" },
-    { text: "No prayer is unanswered. Sometimes the answer is immediate; sometimes it is a deeper transformation of our lives, building an indestructible fortress of happiness.", author: "Daisaku Ikeda" },
-    { text: "To chant daimoku is to tap the sun of Buddhahood within our own hearts. It dispels all darkness in our life and fills us with boundless joy and courage.", author: "Daisaku Ikeda" },
-    { text: "Through chanting Nam-myoho-renge-kyo, we can transform any poison into medicine. Any adversity becomes a source of growth and victory.", author: "Daisaku Ikeda" },
-    { text: "Nichiren writes: 'Nam-myoho-renge-kyo is like the roar of a lion.' No illness, no obstacle, can stand in the way of a lion's roar.", author: "Daisaku Ikeda" },
-    { text: "Chanting is the key that opens the treasury of the cosmos within our own lives. It is the dialogue between our soul and the universe.", author: "Daisaku Ikeda" },
-    { text: "A person of chanting is never defeated. Even if you fall seven times, rise an eighth time with a powerful, resounding daimoku!", author: "Daisaku Ikeda" },
-    { text: "Your prayers are the engine of your victory. Chant with specific targets and determinations, and take courageous action in your daily life.", author: "Daisaku Ikeda" },
-    { text: "Consistency is the path to mastership. Chanting daily, even for a short time, builds an invincible fortress in your heart.", author: "Daisaku Ikeda" }
+    { text: "Even one daimoku can pervade the entire universe. Truly heartfelt and determined daimoku, therefore, has the power to move everything.", author: "Daisaku Ikeda Sensei" },
+    { text: "In times of suffering, chant daimoku. In times of joy, chant daimoku. Chanting daimoku is itself happiness.", author: "Daisaku Ikeda Sensei" },
+    { text: "Nam-myoho-renge-kyo is the fundamental power of the universe. Please chant resounding daimoku morning and evening with the vibrant rhythm of majestic horses galloping through the heavens.", author: "Daisaku Ikeda Sensei" },
+    { text: "Daimoku chanted with the deep conviction that one's life is the entity of the Mystic Law cannot fail to resonate with the universe. You will definitely attain complete freedom.", author: "Daisaku Ikeda Sensei" },
+    { text: "The important thing is to continue chanting daimoku, no matter what. Whether our prayers are answered right away or not, we must keep chanting, without harboring any doubts.", author: "Daisaku Ikeda Sensei" },
+    { text: "When we take our problems to the Gohonzon and chant Nam-myoho-renge-kyo, courage wells forth and hope begins to shine in our hearts.", author: "Daisaku Ikeda Sensei" },
+    { text: "Nichiren Buddhism is about starting from today, starting from this very moment, with a fresh determination. A person of chanting is never defeated.", author: "Daisaku Ikeda Sensei" },
+    { text: "No prayer is unanswered. Sometimes the answer is immediate; sometimes it is a deeper transformation of our lives, building an indestructible fortress of happiness.", author: "Daisaku Ikeda Sensei" },
+    { text: "To chant daimoku is to tap the sun of Buddhahood within our own hearts. It dispels all darkness in our life and fills us with boundless joy and courage.", author: "Daisaku Ikeda Sensei" },
+    { text: "Through chanting Nam-myoho-renge-kyo, we can transform any poison into medicine. Any adversity becomes a source of growth and victory.", author: "Daisaku Ikeda Sensei" },
+    { text: "Nichiren writes: 'Nam-myoho-renge-kyo is like the roar of a lion.' No illness, no obstacle, can stand in the way of a lion's roar.", author: "Daisaku Ikeda Sensei" },
+    { text: "Chanting is the key that opens the treasury of the cosmos within our own lives. It is the dialogue between our soul and the universe.", author: "Daisaku Ikeda Sensei" },
+    { text: "A person of chanting is never defeated. Even if you fall seven times, rise an eighth time with a powerful, resounding daimoku!", author: "Daisaku Ikeda Sensei" },
+    { text: "Your prayers are the engine of your victory. Chant with specific targets and determinations, and take courageous action in your daily life.", author: "Daisaku Ikeda Sensei" },
+    { text: "Consistency is the path to mastership. Chanting daily, even for a short time, builds an invincible fortress in your heart.", author: "Daisaku Ikeda Sensei" }
   ];
 
   // --- App State ---
@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let timerSecondsElapsed = 0;
   let countdownTargetSeconds = 1800; // Default 30 mins
   let timerStartTime = null;
+  let timerAccumulatedPaused = 0; // ms accumulated before pause
 
   // --- DOM Elements ---
   const views = document.querySelectorAll('.content-view');
@@ -93,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnApplyCustomTime = document.getElementById('btn-apply-custom-time');
   const timerTimeDisplay = document.getElementById('timer-time-display');
   const timerStateLabel = document.getElementById('timer-state-label');
-  const breathingGuide = document.getElementById('breathing-guide');
   const timerTargetSelect = document.getElementById('timer-target-select');
   
   // Timer Controls
@@ -152,57 +152,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Web Audio API Gong Synthesizer ---
   function playGong() {
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      
-      // Dynamic envelope
-      const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(0.001, ctx.currentTime);
-      masterGain.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 0.1);
-      masterGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 5.5); // Decay over 5.5s
-      
-      // Warm lowpass filter
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(900, ctx.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 3.0);
-      
-      // Oscillators to model the gong structure (Fundamental + Overtones)
-      const frequencies = [136.1, 218.4, 276.5, 345.2, 450.0];
-      const gains = [0.8, 0.4, 0.2, 0.1, 0.05];
-      const oscillators = [];
-
-      frequencies.forEach((freq, index) => {
-        const osc = ctx.createOscillator();
-        const oscGain = ctx.createGain();
-        
-        osc.type = index === 0 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        
-        oscGain.gain.setValueAtTime(gains[index], ctx.currentTime);
-        
-        // Slight frequency detuning over time for shimmering effect
-        osc.frequency.linearRampToValueAtTime(freq + (Math.random() * 2 - 1), ctx.currentTime + 5);
-        
-        osc.connect(oscGain);
-        oscGain.connect(masterGain);
-        oscillators.push(osc);
-      });
-
-      masterGain.connect(filter);
-      filter.connect(ctx.destination);
-      
-      // Start/Stop
-      oscillators.forEach(osc => osc.start());
-      oscillators.forEach(osc => osc.stop(ctx.currentTime + 6.0));
-    } catch (e) {
-      console.warn("AudioContext failed to start. User interaction may be required:", e);
+    const audio = document.getElementById('gong-audio');
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play().catch(e => console.warn('Audio playback failed', e));
     }
   }
 
-  // --- State Initialization & Storage Sync ---
+  const btnManualGong = document.getElementById('btn-manual-gong');
+  if (btnManualGong) {
+    btnManualGong.addEventListener('click', playGong);
+  }
+
+  function saveActiveTimer() {
+    const timerData = {
+      state: timerState,
+      type: timerType,
+      startTime: timerStartTime,
+      accumulated: timerAccumulatedPaused,
+      target: countdownTargetSeconds
+    };
+    localStorage.setItem('daimoku_active_timer', JSON.stringify(timerData));
+  }
+
+  function loadActiveTimer() {
+    const saved = localStorage.getItem('daimoku_active_timer');
+    if (saved) {
+      try {
+        const t = JSON.parse(saved);
+        if (t.state === 'running' || t.state === 'paused') {
+          timerType = t.type;
+          timerStartTime = t.startTime;
+          timerAccumulatedPaused = t.accumulated;
+          countdownTargetSeconds = t.target;
+          
+          if (timerType === 'countdown') {
+            btnTimerCountdown.click();
+          } else {
+            btnTimerStopwatch.click();
+          }
+          
+          if (t.state === 'running') {
+            resumeTimer();
+          } else {
+            timerState = 'paused';
+            timerStateLabel.textContent = 'Paused';
+            btnTimerPause.classList.add('hidden');
+            btnTimerStart.classList.remove('hidden');
+            
+            if (timerType === 'stopwatch') {
+              timerTimeDisplay.textContent = formatDuration(Math.floor(timerAccumulatedPaused / 1000));
+            } else {
+              const remaining = countdownTargetSeconds - Math.floor(timerAccumulatedPaused / 1000);
+              timerTimeDisplay.textContent = formatDuration(Math.max(0, remaining));
+            }
+          }
+        }
+      } catch(e) {}
+    }
+  }
+
   function loadState() {
     const saved = localStorage.getItem('daimoku_grow_state');
     if (saved) {
@@ -229,6 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculate decay on start
     applyTimeDecay();
     updateUI();
+    loadActiveTimer();
+    updateQuote();
   }
 
   function saveState() {
@@ -246,19 +257,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hours >= 720) { // 30 days
       threshold = 720;
       title = "A dormant seed awaits you...";
-      message = "One month has passed. I am completely withered, but my roots remember your voice. Daisaku Ikeda guides: 'Sincere effort can bring any withered plant back to life.' I need a 3h 20m revival session! 🌱";
+      message = "One month has passed. I am completely withered, but my roots remember your voice. Daisaku Ikeda Sensei guides: 'Sincere effort can bring any withered plant back to life.' I need a 3h 20m revival session! 🌱";
     } else if (hours >= 360) { // 15 days
       threshold = 360;
       title = "Save my life!";
-      message = "15 days of silence. I have withered away. Daisaku Ikeda guides: 'No matter what, keep chanting Nam-myoho-renge-kyo.' Sowing a seed of determination can bring me back! ❤️";
+      message = "15 days of silence. I have withered away. Daisaku Ikeda Sensei guides: 'No matter what, keep chanting Nam-myoho-renge-kyo.' Sowing a seed of determination can bring me back! ❤️";
     } else if (hours >= 168) { // 7 days (1 week)
       threshold = 168;
       title = "I am about to die...";
-      message = "A whole week without Daimoku! I am drying up. Daisaku Ikeda reminds us: 'Consistent efforts yield beautiful blooms.' Please water me with your chanting! 🥀";
+      message = "A whole week without Daimoku! I am drying up. Daisaku Ikeda Sensei reminds us: 'Consistent efforts yield beautiful blooms.' Please water me with your chanting! 🥀";
     } else if (hours >= 72) { // 3 days (72 hours)
       threshold = 72;
       title = "Oh no! I am weakening...";
-      message = "It has been 72 hours. I am beginning to droop. Daisaku Ikeda teaches: 'Even one daimoku can pervade the entire universe.' Let's chant together and restore my life-force! 💧";
+      message = "It has been 72 hours. I am beginning to droop. Daisaku Ikeda Sensei teaches: 'Even one daimoku can pervade the entire universe.' Let's chant together and restore my life-force! 💧";
     } else if (hours >= 24) { // 24 hours
       threshold = 24;
       title = "Water me, please!";
@@ -270,6 +281,32 @@ document.addEventListener('DOMContentLoaded', () => {
       state.lastNotifiedThreshold = threshold;
       triggerNotification(title, message);
       saveState();
+    }
+  }
+
+  function triggerNotification(title, body) {
+    // 1. Show in-app banner
+    notificationBannerText.textContent = body;
+    notificationBanner.className = 'notification-banner'; // reset classes
+    if (state.isDead) {
+      notificationBanner.classList.add('dead');
+    } else if (state.health <= 40) {
+      notificationBanner.classList.add('dying');
+    } else {
+      notificationBanner.classList.add('thirsty');
+    }
+    notificationBanner.classList.remove('hidden');
+
+    // 2. Fire OS-level Push Notification if permission granted
+    if (Notification.permission === 'granted' && navigator.serviceWorker) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, {
+          body: body,
+          icon: 'favicon.ico',
+          badge: 'favicon.ico',
+          vibrate: [200, 100, 200]
+        });
+      });
     }
   }
 
@@ -320,14 +357,15 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
         
-        // Pause timer if user leaves Chant screen and it's running
-        if (viewId !== 'view-chant' && timerState === 'running') {
-          pauseTimer();
-        }
+        // Timer remains running in background when switching views
         
         // Refresh history UI when entering history view
         if (viewId === 'view-history') {
           renderHistoryLogs();
+        }
+        
+        if (viewId === 'view-dashboard' && typeof PlantRenderer.resizeCanvas === 'function') {
+           setTimeout(() => PlantRenderer.resizeCanvas(), 50);
         }
         
         // Refresh targets UI when entering targets view
@@ -340,15 +378,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Daily Quotes Picker ---
   function updateQuote() {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = now - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    const day = Math.floor(diff / oneDay);
-    const quoteIndex = day % QUOTES.length;
+    const today = new Date();
+    const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+    const month = months[today.getMonth()];
+    const day = today.getDate();
+    const url = `https://www.sokaglobal.org/resources/daily-encouragement/${month}-${day}.html`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
     
-    guidanceText.textContent = `"${QUOTES[quoteIndex].text}"`;
-    guidanceAuthor.textContent = `— ${QUOTES[quoteIndex].author}`;
+    guidanceText.textContent = "Loading today's guidance...";
+    guidanceAuthor.textContent = "";
+
+    fetch(proxyUrl)
+      .then(res => res.json())
+      .then(data => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+        const box = doc.querySelector('.box01');
+        if (box) {
+           const texts = box.querySelectorAll('.text');
+           if (texts.length > 1) {
+             guidanceText.textContent = '"' + texts[1].textContent.trim() + '"';
+           }
+           const name = box.querySelector('.name');
+           if (name) {
+             guidanceAuthor.innerHTML = name.innerHTML;
+           }
+        } else {
+           fallbackQuote();
+        }
+      })
+      .catch(err => {
+        console.error('Fetch error:', err);
+        fallbackQuote();
+      });
+      
+      function fallbackQuote() {
+        const start = new Date(today.getFullYear(), 0, 0);
+        const diff = today - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayOfYear = Math.floor(diff / oneDay);
+        const quoteIndex = dayOfYear % QUOTES.length;
+        guidanceText.textContent = '"' + QUOTES[quoteIndex].text + '"';
+        guidanceAuthor.textContent = '— ' + QUOTES[quoteIndex].author;
+      }
   }
 
   // --- Rendering UI States ---
@@ -406,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Trigger canvas state updates
-    PlantRenderer.updateState(parseFloat(totalHours), state.health, state.isDead);
+    PlantRenderer.updateState(parseFloat(totalHours), state.health, state.isDead, timerState === 'running');
     
     // In-App Alerts Banner
     updateNotificationBanner();
@@ -442,20 +514,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (state.isDead) {
       if (diffHours >= 720) { // 30 days
-        notificationBannerText.textContent = "My roots still remember your voice. Daisaku Ikeda guides: 'Sincere effort can bring any withered plant back to life.' I need a 3h 20m revival session! 🌱";
+        notificationBannerText.textContent = "My roots still remember your voice. Daisaku Ikeda Sensei guides: 'Sincere effort can bring any withered plant back to life.' I need a 3h 20m revival session! 🌱";
       } else if (diffHours >= 360) { // 15 days
-        notificationBannerText.textContent = "Save my life! I have completely withered. Ikeda guides: 'No matter what, keep chanting Nam-myoho-renge-kyo.' Let's bring this garden back! ❤️";
+        notificationBannerText.textContent = "Save my life! I have completely withered. Daisaku Ikeda Sensei guides: 'No matter what, keep chanting Nam-myoho-renge-kyo.' Let's bring this garden back! ❤️";
       } else {
         notificationBannerText.textContent = "Your plant has withered from neglect! Chant 3h 20m to revive it.";
       }
       notificationBanner.classList.add('dead');
       notificationBanner.classList.remove('hidden');
     } else if (diffHours >= 168) { // 7 days
-      notificationBannerText.textContent = "I am about to die! Please water me with your consistency. Ikeda reminds us: 'Consistent efforts yield beautiful blooms.' 🥀";
+      notificationBannerText.textContent = "I am about to die! Please water me with your consistency. Daisaku Ikeda Sensei reminds us: 'Consistent efforts yield beautiful blooms.' 🥀";
       notificationBanner.classList.add('dying');
       notificationBanner.classList.remove('hidden');
     } else if (diffHours >= 72) { // 72 hours
-      notificationBannerText.textContent = "I am drooping and shrinking! Daisaku Ikeda teaches: 'Even one daimoku can pervade the entire universe.' Let's chant together and restore my vitality! 💧";
+      notificationBannerText.textContent = "I am drooping and shrinking! Daisaku Ikeda Sensei teaches: 'Even one daimoku can pervade the entire universe.' Let's chant together and restore my vitality! 💧";
       notificationBanner.classList.add('dying');
       notificationBanner.classList.remove('hidden');
     } else if (diffHours >= 24) { // 24 hours
@@ -526,7 +598,6 @@ document.addEventListener('DOMContentLoaded', () => {
       timerSecondsElapsed = 0;
     }
     timerStateLabel.textContent = 'Ready';
-    stopBreathingGuide();
   }
 
   function formatDuration(totalSeconds) {
@@ -541,50 +612,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ].join(':');
   }
 
-  // Breathing focus helper triggers
-  let breathingTimer = null;
-  function startBreathingGuide() {
-    stopBreathingGuide();
-    
-    let phase = 0; // 0 = inhale, 1 = hold, 2 = exhale
-    breathingGuide.className = 'breathing-guide';
-    
-    function breathe() {
-      if (timerState !== 'running') return;
-      
-      breathingGuide.className = 'breathing-guide';
-      if (phase === 0) {
-        timerStateLabel.textContent = 'Inhale...';
-        breathingGuide.classList.add('inhale');
-        phase = 1;
-        breathingTimer = setTimeout(breathe, 4000); // 4s inhale
-      } else if (phase === 1) {
-        timerStateLabel.textContent = 'Hold Focus...';
-        breathingGuide.classList.add('hold');
-        phase = 2;
-        breathingTimer = setTimeout(breathe, 2000); // 2s hold
-      } else {
-        timerStateLabel.textContent = 'Exhale...';
-        breathingGuide.classList.add('exhale');
-        phase = 0;
-        breathingTimer = setTimeout(breathe, 4000); // 4s exhale
-      }
-    }
-    breathe();
-  }
-
-  function stopBreathingGuide() {
-    if (breathingTimer) {
-      clearTimeout(breathingTimer);
-      breathingTimer = null;
-    }
-    breathingGuide.className = 'breathing-guide';
-  }
-
   // Start Chanting Timer
   btnTimerStart.addEventListener('click', () => {
+    resumeTimer();
+  });
+
+  function resumeTimer() {
     timerState = 'running';
-    timerStartTime = new Date();
+    timerStartTime = Date.now();
     
     btnTimerStart.classList.add('hidden');
     btnTimerPause.classList.remove('hidden');
@@ -596,14 +631,21 @@ document.addEventListener('DOMContentLoaded', () => {
     presetButtons.forEach(b => b.disabled = true);
     btnApplyCustomTime.disabled = true;
     
-    startBreathingGuide();
+    timerStateLabel.textContent = 'Focus';
+    
+    const totalHours = (state.totalSeconds / 3600).toFixed(1);
+    PlantRenderer.updateState(parseFloat(totalHours), state.health, state.isDead, true);
+    saveActiveTimer();
     
     timerInterval = setInterval(() => {
-      timerSecondsElapsed++;
+      const now = Date.now();
+      const elapsedMs = now - timerStartTime + timerAccumulatedPaused;
       
       if (timerType === 'stopwatch') {
+        timerSecondsElapsed = Math.floor(elapsedMs / 1000);
         timerTimeDisplay.textContent = formatDuration(timerSecondsElapsed);
       } else {
+        timerSecondsElapsed = Math.floor(elapsedMs / 1000);
         const remaining = countdownTargetSeconds - timerSecondsElapsed;
         if (remaining <= 0) {
           // Timer finished!
@@ -617,18 +659,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     }, 1000);
-  });
+  }
 
   // Pause Timer
   btnTimerPause.addEventListener('click', pauseTimer);
   
   function pauseTimer() {
+    if (timerState !== 'running') return;
     timerState = 'paused';
     clearInterval(timerInterval);
-    stopBreathingGuide();
+    timerAccumulatedPaused += (Date.now() - timerStartTime);
     timerStateLabel.textContent = 'Paused';
     btnTimerPause.classList.add('hidden');
     btnTimerStart.classList.remove('hidden');
+    const totalHours = (state.totalSeconds / 3600).toFixed(1);
+    PlantRenderer.updateState(parseFloat(totalHours), state.health, state.isDead, false);
+    saveActiveTimer();
   }
 
   // Stop and record
@@ -648,7 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetTimerControls() {
     timerState = 'idle';
     clearInterval(timerInterval);
-    stopBreathingGuide();
+    timerAccumulatedPaused = 0;
     
     btnTimerStart.classList.remove('hidden');
     btnTimerPause.classList.add('hidden');
@@ -660,6 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
     presetButtons.forEach(b => b.disabled = false);
     btnApplyCustomTime.disabled = false;
     
+    const totalHours = (state.totalSeconds / 3600).toFixed(1);
+    PlantRenderer.updateState(parseFloat(totalHours), state.health, state.isDead, false);
+    saveActiveTimer();
     resetTimerDisplay();
   }
 
@@ -766,6 +815,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Cap minutes input to 60 manually
+  logMinutes.addEventListener('input', () => {
+    const val = parseInt(logMinutes.value || 0);
+    if (val > 60) {
+      logMinutes.value = 60;
+    }
+  });
+
   // --- Manual Log Submission ---
   manualLogForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -789,6 +846,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedDate = new Date(logDateInput.value);
     selectedDate.setHours(12, 0, 0, 0);
     
+    const sessionDateString = selectedDate.toISOString();
+    if (sessionDateString === "Invalid Date" || isNaN(selectedDate.getTime())) {
+      alert("Invalid date selected!");
+      return;
+    }
+    
     // Read selected target ID and allocate time
     const selectedTargetId = manualTargetSelect.value;
     if (selectedTargetId) {
@@ -797,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const session = {
       id: Date.now().toString(),
-      date: selectedDate.toISOString(),
+      date: sessionDateString,
       durationSeconds: totalSecs,
       method: 'manual',
       targetId: selectedTargetId || null
@@ -1383,6 +1446,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Boot Sequences ---
   loadState();
+  
+  // Ensure lastChantedDate is valid (fixes the blank/NaN bug)
+  const parsedLastChanted = new Date(state.lastChantedDate);
+  if (isNaN(parsedLastChanted.getTime())) {
+    state.lastChantedDate = new Date().toISOString();
+    state.health = 100;
+  }
+  
   initNavigation();
   updateQuote();
   renderTargetsList();
@@ -1412,5 +1483,51 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.error('Service Worker registration failed:', err));
     });
   }
+
+  // --- Push Notification Setup ---
+  if (btnRequestNotifications) {
+    // Check initial state
+    if (Notification.permission === 'granted') {
+      btnRequestNotifications.textContent = 'Notifications Enabled ✓';
+      btnRequestNotifications.disabled = true;
+    } else if (Notification.permission === 'denied') {
+      btnRequestNotifications.textContent = 'Notifications Blocked in Browser';
+      btnRequestNotifications.disabled = true;
+    }
+    
+    btnRequestNotifications.addEventListener('click', () => {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          btnRequestNotifications.textContent = 'Notifications Enabled ✓';
+          btnRequestNotifications.disabled = true;
+          // Send a test notification
+          if (navigator.serviceWorker) {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification("Daimoku Grow", { body: "Push notifications are now active! I'll remind you to water me." });
+            });
+          }
+        } else {
+          btnRequestNotifications.textContent = 'Notifications Denied';
+        }
+      });
+    });
+  }
   
+  // --- Auto Fullscreen ---
+  function goFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    }
+    // Remove the listener once triggered to avoid constant calls
+    document.body.removeEventListener('click', goFullscreen);
+    document.body.removeEventListener('touchstart', goFullscreen);
+  }
+  
+  // Trigger fullscreen on first user interaction
+  document.body.addEventListener('click', goFullscreen);
+  document.body.addEventListener('touchstart', goFullscreen);
+
 });
+

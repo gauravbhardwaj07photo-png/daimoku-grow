@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Daimoku Grow - Spiritual Chant & Garden</title>
   
   <!-- SEO & PWA Meta Tags -->
@@ -25,6 +25,19 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="theme-sage-light">
+  <div id="debug-error-banner" style="display:none; position:fixed; top:0; left:0; width:100%; background:red; color:white; z-index:999999; padding:20px; font-size:14px; white-space:pre-wrap; overflow-y:auto; max-height:50vh;"></div>
+  <script>
+    window.addEventListener('error', function(e) {
+      var banner = document.getElementById('debug-error-banner');
+      banner.style.display = 'block';
+      banner.innerHTML += 'Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno + ':' + e.colno + '\n' + (e.error && e.error.stack ? e.error.stack : '') + '\n\n';
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+      var banner = document.getElementById('debug-error-banner');
+      banner.style.display = 'block';
+      banner.innerHTML += 'Unhandled Promise Rejection: ' + e.reason + '\n\n';
+    });
+  </script>
 
   <div class="app-container">
     
@@ -145,25 +158,20 @@
               <button class="preset-btn active" data-mins="30">30m</button>
               <button class="preset-btn" data-mins="45">45m</button>
               <button class="preset-btn" data-mins="60">1h</button>
-              <button class="preset-btn" data-mins="120">2h</button>
               <button class="preset-btn" id="preset-custom-btn">Custom</button>
             </div>
 
-            <!-- Custom Minutes Input Panel -->
             <div id="custom-minutes-input-container" class="custom-input-box hidden">
               <label for="custom-minutes">Minutes:</label>
-              <input type="number" id="custom-minutes" min="1" max="1440" value="30">
+              <input type="number" id="custom-minutes" min="1" max="60" value="30">
               <button id="btn-apply-custom-time" class="btn-small">Set</button>
             </div>
 
             <!-- Timer Display -->
             <div class="timer-display-container">
-              <div class="breathing-circle-wrapper">
-                <div id="breathing-guide" class="breathing-guide"></div>
-                <div class="timer-digits-box">
-                  <div class="timer-time" id="timer-time-display">00:00:00</div>
-                  <div class="timer-label" id="timer-state-label">Ready</div>
-                </div>
+              <div class="timer-digits-box">
+                <div class="timer-time" id="timer-time-display">00:00:00</div>
+                <div class="timer-label" id="timer-state-label">Ready</div>
               </div>
             </div>
 
@@ -177,10 +185,11 @@
 
             <!-- Timer Controls -->
             <div class="timer-controls">
-              <button id="btn-timer-start" class="btn btn-primary"><i class="fa-solid fa-play"></i> Start Chant</button>
+              <button id="btn-timer-start" class="btn btn-primary"><i class="fa-solid fa-play"></i> Start</button>
               <button id="btn-timer-pause" class="btn btn-secondary hidden"><i class="fa-solid fa-pause"></i> Pause</button>
               <button id="btn-timer-stop" class="btn btn-success hidden"><i class="fa-solid fa-stop"></i> Stop & Record</button>
               <button id="btn-timer-cancel" class="btn btn-danger hidden"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+              <button id="btn-manual-gong" class="btn btn-icon-gong" title="Sound Bell"><i class="fa-solid fa-bell"></i></button>
             </div>
           </div>
 
@@ -195,7 +204,7 @@
                 </div>
                 <div class="form-group">
                   <label for="log-minutes">Minutes</label>
-                  <input type="number" id="log-minutes" min="0" max="59" value="15">
+                  <input type="number" id="log-minutes" min="0" max="60" value="15">
                 </div>
               </div>
               <div class="form-group">
@@ -437,6 +446,19 @@
         </div>
       </section>
 
+      <!-- VIEW 5: CAMPAIGN -->
+      <section id="view-campaign" class="content-view">
+        <div class="campaign-grid">
+          <div class="card campaign-card">
+            <h2>Campaigns</h2>
+            <div class="empty-state">
+              <i class="fa-solid fa-bullhorn"></i>
+              <p>Campaign features coming soon!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
 
     <!-- Bottom Navigation Bar -->
@@ -457,6 +479,10 @@
         <i class="fa-solid fa-list-ul"></i>
         <span>History</span>
       </button>
+      <button id="nav-campaign" class="nav-item">
+        <i class="fa-solid fa-bullhorn"></i>
+        <span>Campaign</span>
+      </button>
       <button id="nav-settings" class="nav-item">
         <i class="fa-solid fa-sliders"></i>
         <span>Settings</span>
@@ -464,6 +490,9 @@
     </nav>
 
   </div>
+
+  <!-- Audio Element for Gong -->
+  <audio id="gong-audio" src="sounds/gong.mp3" preload="auto"></audio>
 
   <!-- Include App Logic and Scripts -->
   <script src="plant.js"></script>

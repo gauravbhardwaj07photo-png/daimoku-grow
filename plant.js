@@ -14,6 +14,7 @@ const PlantRenderer = (function() {
   let currentHours = 0;
   let currentHealth = 100;
   let isDead = false;
+  let isChanting = false;
   
   // Theme Color Configurations (so the pot matches the active theme)
   const colors = {
@@ -73,10 +74,11 @@ const PlantRenderer = (function() {
   /**
    * Set the plant parameters and queue a redraw
    */
-  function updateState(hours, health, deadState) {
+  function updateState(hours, health, deadState, chantingState) {
     currentHours = hours;
     currentHealth = health;
     isDead = deadState || (health <= 0);
+    isChanting = !!chantingState;
   }
 
   /**
@@ -495,7 +497,7 @@ const PlantRenderer = (function() {
         };
         
         // Root trunk width scale
-        drawTreeBranch(0, 0, 150 * masterScale, 0, 3);
+        drawTreeBranch(0, 0, 110 * masterScale, 0, 3);
       }
       
       // Happy sparkle particles logic (only when happy and actively chanting/testing)
@@ -616,7 +618,301 @@ const PlantRenderer = (function() {
     ctx.stroke();
     ctx.restore();
     
-    // 6. Special Stage 1 — seed only, nothing above soil
+    // 6. Draw Animations during Chanting
+    if (isChanting) {
+      ctx.save();
+      
+      // Stream of Large Water Drops falling faster
+      ctx.fillStyle = 'rgba(100, 200, 255, 0.7)';
+      const dropSpeed = 150; // Increased speed significantly
+      const dropRadius = 4;
+      const dropSpacing = 80; // Distance between successive drops
+      const dropX = w / 2;
+      
+      for (let i = 0; i < 3; i++) {
+        // Cycle from top to bottom
+        const baseDropY = (windTime * dropSpeed + i * dropSpacing) % (potY + 20);
+        const dropY = baseDropY - 10;
+        
+        if (dropY < potY && dropY > -20) {
+          // Draw tear-drop shape
+          ctx.beginPath();
+          ctx.arc(dropX, dropY, dropRadius, 0, Math.PI, false);
+          ctx.lineTo(dropX, dropY - dropRadius * 2.5);
+          ctx.closePath();
+          ctx.fill();
+          
+          // Splash effect right as it hits the soil
+          if (dropY > potY - 10) {
+            ctx.fillStyle = 'rgba(100, 200, 255, 0.4)';
+            ctx.beginPath();
+            ctx.arc(dropX - 6, dropY, 2, 0, Math.PI * 2);
+            ctx.arc(dropX + 6, dropY, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(100, 200, 255, 0.7)'; // Reset for next drop
+          }
+        }
+      }
+      
+      // Multiple Butterflies (Blue, Yellow, Red)
+      const butterflies = [
+        { color: 'rgba(100, 150, 255, 0.9)', offset: 0, speedX: 0.3, speedY: 0.5, flap: 10, scale: 1.0 }, // Blue
+        { color: 'rgba(255, 220, 100, 0.9)', offset: 2, speedX: 0.4, speedY: 0.3, flap: 12, scale: 1.0 }, // Yellow
+        { color: 'rgba(255, 100, 100, 0.9)', offset: 4, speedX: 0.25, speedY: 0.6, flap: 8, scale: 1.0 }  // Red
+      ];
+      
+      butterflies.forEach(b => {
+        ctx.save();
+        const butterX = potX + Math.sin(windTime * b.speedX + b.offset) * 160;
+        const butterY = potY - 120 + Math.cos(windTime * b.speedY + b.offset) * 40;
+        const wingFlap = Math.sin(windTime * b.flap);
+        
+        ctx.translate(butterX, butterY);
+        ctx.scale(b.scale, b.scale);
+        
+        // Body
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 1.5, 4, 0, 0, Math.PI*2);
+        ctx.fill();
+        
+        // Wings
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        ctx.ellipse(-2 - (wingFlap * 2), -2, 5, 7, -0.5, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(2 + (wingFlap * 2), -2, 5, 7, 0.5, 0, Math.PI*2);
+        ctx.fill();
+        
+        ctx.restore();
+      });
+      
+      // Bird sitting firmly on rim
+      ctx.save();
+      const birdX = potX - rimTopW + 30;
+      const birdY = potY - 3; // Lowered to sit exactly on the rim
+      ctx.translate(birdX, birdY);
+      ctx.scale(2.5, 2.5); // Make bird significantly bigger
+      
+      // Bird feet
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      // Left foot
+      ctx.moveTo(-2, 0);
+      ctx.lineTo(-2, 2);
+      ctx.lineTo(-3, 3);
+      ctx.moveTo(-2, 2);
+      ctx.lineTo(-1, 3);
+      // Right foot
+      ctx.moveTo(2, 0);
+      ctx.lineTo(2, 2);
+      ctx.lineTo(1, 3);
+      ctx.moveTo(2, 2);
+      ctx.lineTo(3, 3);
+      ctx.stroke();
+      
+      // Bird body
+      ctx.fillStyle = '#8ca6cc'; // Soft blue bird
+      ctx.beginPath();
+      ctx.arc(0, 0, 6, Math.PI, 0); // half circle body
+      ctx.fill();
+      
+      // NEW: Flutter wings if tweeting
+      const isTweeting = (windTime % 60) > 58; // tweet for 2 seconds every minute
+      if (isTweeting) {
+        ctx.fillStyle = '#6b8cbd';
+        ctx.beginPath();
+        const wingFlap = Math.sin(windTime * 20) * 3;
+        ctx.ellipse(-1, -2, 5, 3, -0.2 + wingFlap * 0.1, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      // Bird head
+      ctx.beginPath();
+      ctx.arc(4, -4, 4, 0, Math.PI*2);
+      ctx.fill();
+      
+      // Bird eye
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(5, -5, 0.8, 0, Math.PI*2); // small dot eye
+      ctx.fill();
+      
+      // Beak (Silent, closed, OR Tweeting, open)
+      ctx.fillStyle = '#e5ad35';
+      ctx.beginPath();
+      if (isTweeting) {
+        ctx.moveTo(7, -5); ctx.lineTo(12, -6); ctx.lineTo(8, -3); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(7, -3); ctx.lineTo(12, -1); ctx.lineTo(8, -1); ctx.fill();
+        
+        ctx.fillStyle = '#333';
+        ctx.font = '6px sans-serif';
+        const noteBob = Math.sin(windTime * 10) * 2;
+        ctx.fillText('♪', 12, -8 + noteBob);
+      } else {
+        ctx.moveTo(7, -4); ctx.lineTo(11, -3); ctx.lineTo(7, -2); ctx.fill();
+      }
+      
+      ctx.restore();
+
+      // Lion Cub Animation
+      const cycle = windTime % 300; // 5 minute cycle (300 seconds)
+      
+      let lionX = -50;
+      let isSitting = false;
+      let isRoaring = false;
+      let walkBob = 0;
+      
+      if (cycle < 10) {
+        // Walking in from left to center left (10 seconds)
+        lionX = -50 + (cycle / 10) * (potX - 120 + 50); 
+        walkBob = Math.sin(cycle * 8) * 2;
+      } else if (cycle < 40) {
+        // Sitting near the pot (30 seconds)
+        lionX = potX - 120;
+        isSitting = true;
+        if (cycle > 30 && cycle < 40) {
+          // Roar for the last 10 seconds of sitting
+          isRoaring = true;
+        }
+      } else if (cycle < 50) {
+        // Walking out to right (10 seconds)
+        lionX = potX - 120 + ((cycle - 40) / 10) * (w + 50 - (potX - 120));
+        walkBob = Math.sin((cycle - 40) * 8) * 2;
+      } else {
+        // Offscreen waiting for next cycle
+        lionX = -1000;
+      }
+      
+      const lionY = potY + 65 * masterScale + walkBob; // Ground level near the base of the pot
+      
+      ctx.save();
+      ctx.translate(lionX, lionY);
+      ctx.scale(1.5, 1.5);
+      
+      // Draw Lion Cub
+      
+      const headX = 4;
+      const headY = isSitting ? -12 : -10;
+
+      // Tail
+      ctx.strokeStyle = '#f5c65a';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-10, isSitting ? 10 : 2);
+      const tailWag = isSitting ? Math.sin(windTime * 5) * 5 : Math.sin(cycle * 8) * 10;
+      ctx.quadraticCurveTo(-20, isSitting ? 10 : 0, -15 + tailWag, isSitting ? 0 : -10);
+      ctx.stroke();
+      // Tail tuft
+      ctx.fillStyle = '#b36b22';
+      ctx.beginPath();
+      ctx.arc(-15 + tailWag, isSitting ? 0 : -10, 3, 0, Math.PI*2);
+      ctx.fill();
+      
+      if (isSitting) {
+        // Sitting Body
+        ctx.fillStyle = '#f5c65a';
+        ctx.beginPath(); ctx.ellipse(0, 0, 10, 14, 0.1, 0, Math.PI*2); ctx.fill();
+        // Chest fluff
+        ctx.fillStyle = '#fff4d9';
+        ctx.beginPath(); ctx.ellipse(3, -2, 6, 9, 0.1, 0, Math.PI*2); ctx.fill();
+        // Hind leg
+        ctx.fillStyle = '#eab640';
+        ctx.beginPath(); ctx.ellipse(-6, 8, 7, 7, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-3, 14, 6, 4, 0, 0, Math.PI*2); ctx.fill();
+        // Front legs
+        ctx.fillStyle = '#f5c65a';
+        ctx.beginPath(); ctx.rect(-2, 4, 4, 10); ctx.rect(4, 4, 4, 10); ctx.fill();
+        ctx.fillStyle = '#eab640';
+        ctx.beginPath(); ctx.ellipse(0, 14, 4, 3, 0, 0, Math.PI*2); ctx.ellipse(6, 14, 4, 3, 0, 0, Math.PI*2); ctx.fill();
+      } else {
+        // Walking Body
+        ctx.fillStyle = '#f5c65a';
+        ctx.beginPath(); ctx.ellipse(0, 0, 14, 9, 0, 0, Math.PI*2); ctx.fill();
+        // Walking legs
+        ctx.strokeStyle = '#f5c65a';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        const walkSwing = Math.sin(cycle * 8) * 6;
+        ctx.moveTo(6, 4); ctx.lineTo(6 + walkSwing, 14);
+        ctx.moveTo(2, 4); ctx.lineTo(2 - walkSwing, 14);
+        ctx.moveTo(-6, 4); ctx.lineTo(-6 - walkSwing, 14);
+        ctx.moveTo(-10, 4); ctx.lineTo(-10 + walkSwing, 14);
+        ctx.stroke();
+      }
+
+      // Mane (proud fluffy brown mane)
+      ctx.fillStyle = '#b36b22';
+      ctx.beginPath();
+      for(let i=0; i<12; i++) {
+         let angle = (i/12) * Math.PI*2;
+         let mx = headX + Math.cos(angle) * 8.5;
+         let my = headY + Math.sin(angle) * 8.5;
+         ctx.arc(mx, my, 4.5, 0, Math.PI*2);
+      }
+      ctx.fill();
+
+      // Ears (tucked slightly in mane)
+      ctx.fillStyle = '#f5c65a';
+      ctx.beginPath(); ctx.arc(headX - 8, headY - 6, 3, 0, Math.PI*2); ctx.arc(headX + 8, headY - 6, 3, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff4d9';
+      ctx.beginPath(); ctx.arc(headX - 8, headY - 6, 1.5, 0, Math.PI*2); ctx.arc(headX + 8, headY - 6, 1.5, 0, Math.PI*2); ctx.fill();
+
+      // Main head
+      ctx.fillStyle = '#f5c65a';
+      ctx.beginPath(); ctx.ellipse(headX, headY, 12, 11, 0, 0, Math.PI*2); ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(headX - 4, headY - 1, 2.5, 0, Math.PI*2);
+      ctx.arc(headX + 4, headY - 1, 2.5, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = 'white';
+      ctx.beginPath(); ctx.arc(headX - 4.5, headY - 2, 0.8, 0, Math.PI*2); ctx.arc(headX + 3.5, headY - 2, 0.8, 0, Math.PI*2); ctx.fill();
+
+      // Muzzle
+      ctx.fillStyle = '#fff4d9';
+      ctx.beginPath(); ctx.ellipse(headX, headY + 5, 6, 4, 0, 0, Math.PI*2); ctx.fill();
+
+      // Nose
+      ctx.fillStyle = '#333';
+      ctx.beginPath(); ctx.ellipse(headX, headY + 3.5, 2.5, 1.5, 0, 0, Math.PI*2); ctx.fill();
+
+      if (isRoaring) {
+        ctx.fillStyle = '#9c3030';
+        ctx.beginPath(); ctx.arc(headX, headY + 6, 3, 0, Math.PI); ctx.fill();
+        ctx.fillStyle = '#e5ad35';
+        ctx.font = 'bold 10px sans-serif';
+        const roarBob = Math.sin(windTime * 15) * 2;
+        ctx.fillText('RAWR!', headX + 15, headY - 5 + roarBob);
+      } else {
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(headX, headY + 5); ctx.lineTo(headX, headY + 6.5); ctx.stroke();
+        ctx.beginPath(); ctx.arc(headX - 2, headY + 6.5, 2, 0, Math.PI, false); ctx.stroke();
+        ctx.beginPath(); ctx.arc(headX + 2, headY + 6.5, 2, 0, Math.PI, false); ctx.stroke();
+      }
+
+      // Whiskers
+      ctx.strokeStyle = '#888';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(headX - 6, headY + 5); ctx.lineTo(headX - 12, headY + 4);
+      ctx.moveTo(headX - 6, headY + 6); ctx.lineTo(headX - 12, headY + 6);
+      ctx.moveTo(headX + 6, headY + 5); ctx.lineTo(headX + 12, headY + 4);
+      ctx.moveTo(headX + 6, headY + 6); ctx.lineTo(headX + 12, headY + 6);
+      ctx.stroke();
+      
+      ctx.restore(); // lion restore
+      ctx.restore(); // isChanting block restore
+    }
+    
+    // 7. Special Stage 1 — seed only, nothing above soil
     if (stageInfo.stage === 1) {
       ctx.save();
       ctx.translate(potX, potY + rimH - 6);
@@ -635,8 +931,6 @@ const PlantRenderer = (function() {
       ctx.stroke();
       ctx.restore();
     }
-    
-    ctx.restore();
   }
 
   // API Expose
@@ -647,6 +941,7 @@ const PlantRenderer = (function() {
     startAnimation: startAnimation,
     stopAnimation: stopAnimation,
     getGrowthStage: getGrowthStage,
-    getPlantMood: getPlantMood
+    getPlantMood: getPlantMood,
+    resizeCanvas: resizeCanvas
   };
 })();
