@@ -1048,10 +1048,19 @@ document.addEventListener('DOMContentLoaded', () => {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
         alert("Notification permissions granted!");
-        new Notification("Daimoku Grow", {
-          body: "Great! Reminders are now set up to keep your virtual plant healthy.",
-          icon: "icons/icon-192.png"
-        });
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification("Daimoku Grow", {
+              body: "Great! Reminders are now set up to keep your virtual plant healthy.",
+              icon: "icons/icon-192.png"
+            });
+          });
+        } else {
+          new Notification("Daimoku Grow", {
+            body: "Great! Reminders are now set up to keep your virtual plant healthy.",
+            icon: "icons/icon-192.png"
+          });
+        }
       } else {
         alert("Notification permissions denied. In-app alerts will still be shown.");
       }
@@ -1116,10 +1125,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function triggerNotification(title, message) {
     // 1. Show Local Web Notification
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(title, {
-        body: message,
-        icon: "icons/icon-192.png"
-      });
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(title, {
+            body: message,
+            icon: "icons/icon-192.png"
+          });
+        });
+      } else {
+        new Notification(title, {
+          body: message,
+          icon: "icons/icon-192.png"
+        });
+      }
     }
     
     // 2. Log in-app warning alerts
