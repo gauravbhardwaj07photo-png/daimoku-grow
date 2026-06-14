@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daimoku-grow-v1';
+const CACHE_NAME = 'daimoku-grow-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   './plant.js',
   './app.js',
   './manifest.json',
+  './sounds/gong.mp3',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
