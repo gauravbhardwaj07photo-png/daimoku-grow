@@ -284,11 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function triggerNotification(title, body) {
+  function triggerNotification(title, message, type = '') {
     // 1. Show in-app banner
-    notificationBannerText.textContent = body;
+    notificationBannerText.textContent = message;
     notificationBanner.className = 'notification-banner'; // reset classes
-    if (state.isDead) {
+    if (type) {
+      notificationBanner.classList.add(type);
+    } else if (state.isDead) {
       notificationBanner.classList.add('dead');
     } else if (state.health <= 40) {
       notificationBanner.classList.add('dying');
@@ -297,16 +299,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     notificationBanner.classList.remove('hidden');
 
-    // 2. Fire OS-level Push Notification if permission granted
-    if (Notification.permission === 'granted' && navigator.serviceWorker) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification(title, {
-          body: body,
-          icon: 'favicon.ico',
-          badge: 'favicon.ico',
-          vibrate: [200, 100, 200]
+    // 2. Fire OS-level Push Notification if permission granted (plays default system tone on phone)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const options = {
+        body: message,
+        icon: "icons/icon-192.png",
+        badge: "icons/icon-192.png",
+        vibrate: [300, 100, 300, 100, 400],
+        tag: "daimoku-reminder",
+        renotify: true,
+        requireInteraction: true
+      };
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(title, options);
         });
-      });
+      } else {
+        new Notification(title, options);
+      }
     }
   }
 
@@ -1038,34 +1049,56 @@ document.addEventListener('DOMContentLoaded', () => {
     playGong();
   });
 
-  // Web Notification Permissions Request
-  btnRequestNotifications.addEventListener('click', () => {
+  // --- Notification Permission & Setup Manager ---
+  if (btnRequestNotifications) {
+    // Set initial button state based on permission
     if (!('Notification' in window)) {
-      alert("This browser does not support desktop notifications.");
-      return;
+      btnRequestNotifications.textContent = 'Notifications Not Supported';
+      btnRequestNotifications.disabled = true;
+    } else if (Notification.permission === 'granted') {
+      btnRequestNotifications.textContent = 'Notifications Enabled ✓';
+      btnRequestNotifications.disabled = true;
+    } else if (Notification.permission === 'denied') {
+      btnRequestNotifications.textContent = 'Notifications Blocked in Browser';
+      btnRequestNotifications.disabled = true;
     }
-    
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        alert("Notification permissions granted!");
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification("Daimoku Grow", {
-              body: "Great! Reminders are now set up to keep your virtual plant healthy.",
-              icon: "icons/icon-192.png"
-            });
-          });
-        } else {
-          new Notification("Daimoku Grow", {
-            body: "Great! Reminders are now set up to keep your virtual plant healthy.",
-            icon: "icons/icon-192.png"
-          });
-        }
-      } else {
-        alert("Notification permissions denied. In-app alerts will still be shown.");
+
+    btnRequestNotifications.addEventListener('click', () => {
+      if (!('Notification' in window)) {
+        alert("This browser does not support notifications.");
+        return;
       }
+
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          btnRequestNotifications.textContent = 'Notifications Enabled ✓';
+          btnRequestNotifications.disabled = true;
+          alert("Notification permissions granted!");
+
+          const options = {
+            body: "Great! Reminders are now set up to keep your virtual plant healthy.",
+            icon: "icons/icon-192.png",
+            badge: "icons/icon-192.png",
+            vibrate: [300, 100, 300],
+            tag: "daimoku-reminder",
+            renotify: true
+          };
+
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification("Daimoku Grow", options);
+            });
+          } else {
+            new Notification("Daimoku Grow", options);
+          }
+        } else {
+          btnRequestNotifications.textContent = 'Notifications Blocked in Browser';
+          btnRequestNotifications.disabled = true;
+          alert("Notification permissions denied. In-app alerts will still be shown.");
+        }
+      });
     });
-  });
+  }
 
   // Theme Swapper
   themeButtons.forEach(btn => {
@@ -1122,27 +1155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function triggerNotification(title, message) {
-    // 1. Show Local Web Notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(reg => {
-          reg.showNotification(title, {
-            body: message,
-            icon: "icons/icon-192.png"
-          });
-        });
-      } else {
-        new Notification(title, {
-          body: message,
-          icon: "icons/icon-192.png"
-        });
-      }
-    }
-    
-    // 2. Log in-app warning alerts
-    console.log(`[Notification Triggered] ${title}: ${message}`);
-  }
+  // (triggerNotification is defined in the upper scope)
 
   // --- Developer Debug Panel Toggle & Functions ---
   btnToggleDebug.addEventListener('click', () => {
@@ -1502,34 +1515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Push Notification Setup ---
-  if (btnRequestNotifications) {
-    // Check initial state
-    if (Notification.permission === 'granted') {
-      btnRequestNotifications.textContent = 'Notifications Enabled ✓';
-      btnRequestNotifications.disabled = true;
-    } else if (Notification.permission === 'denied') {
-      btnRequestNotifications.textContent = 'Notifications Blocked in Browser';
-      btnRequestNotifications.disabled = true;
-    }
-    
-    btnRequestNotifications.addEventListener('click', () => {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          btnRequestNotifications.textContent = 'Notifications Enabled ✓';
-          btnRequestNotifications.disabled = true;
-          // Send a test notification
-          if (navigator.serviceWorker) {
-            navigator.serviceWorker.ready.then(reg => {
-              reg.showNotification("Daimoku Grow", { body: "Push notifications are now active! I'll remind you to water me." });
-            });
-          }
-        } else {
-          btnRequestNotifications.textContent = 'Notifications Denied';
-        }
-      });
-    });
-  }
+  // --- Notification Setup already handles this ---
   
   // --- Auto Fullscreen ---
   function goFullscreen() {
