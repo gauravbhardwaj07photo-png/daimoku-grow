@@ -1519,10 +1519,19 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // --- Auto Fullscreen ---
   function goFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.log(`Error attempting to enable fullscreen: ${err.message}`);
-      });
+    if (document.documentElement.requestFullscreen) {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      }
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      // Fallback for Safari/iOS WebKit (where supported, e.g. iPads)
+      if (!document.webkitFullscreenElement) {
+        document.documentElement.webkitRequestFullscreen();
+      }
+    } else {
+      console.log("Fullscreen API is not supported on this device/browser (e.g. iPhone Safari/Chrome).");
     }
     // Remove the listener once triggered to avoid constant calls
     document.body.removeEventListener('click', goFullscreen);
